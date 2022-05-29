@@ -1,3 +1,4 @@
+from msilib import schema
 import sqlalchemy
 import threading
 import logging
@@ -13,6 +14,7 @@ class DBView:
             logger.warning('Lost connection to DB ({}). Retrying...'.format(str(e)))
             self.conn_ = self.engine_.connect()
             res = self.conn_.execute(*args, **kwargs)
+        self.conn_.commit()
         return res
 
     def update_proxies_stats_(self):
@@ -21,12 +23,13 @@ class DBView:
         using (select proxy_id, sum(flg_success) as cnt_good, count(*) as cnt_total
             from {schema}.log where status_dt > current_timestamp::DATE - 1) AS upd
         on src.proxy_id=upd.proxy_id
-        when matched update set priority = 0.5 * priority + 0.5 * cnt_good / cnt_total
+        when matched update set priority = 0.5 * priority + 0.5 * cnt_good / cnt_total, last_update=current_timestamp
         """.format(self.schema_)
         try:
             logger.info('Running update-proxies query')
             with self.engine_.connect() as conn:
                 conn.execute(update_query)
+                conn.commit()
         except Exception as e:
             logger.error('Failed to update proxies stats: {}'.format(str(e)))
         else:
@@ -92,5 +95,22 @@ class DBView:
             self.update_local_proxies_(self.mult_factor_)
         return self.proxies_.pop()
 
-    def 
-        
+    def add_proxies(self, proxy_array):
+        query = f"""
+        insert into {self.schema}.proxies (url, kind, enabled, priority)
+        values (:1, :2, :3, :4)
+        returning proxy_id
+        """
+        input = [(x['url'] if type(x) is dict else x,
+                    x.get('kind', 'http') if type(x) is dict else 'http', 
+                    x.get('enabled', 1) if type(x) is dict else 1, 
+                    x.get('priority', 1.0) if type(x) is dict else 1.0) x for x in proxy_array]
+        res = self.execute_(query, input).fetchall()
+        return res
+    
+    def set_proxy_status(self, proxy_id, enabled=1):
+        query = f"""
+        update {self.schema}.proxies set enabled={enabled}
+        where proxy_id={proxy_id}
+        """
+        self.execute_(query)
