@@ -19,6 +19,6 @@ jobs:
         DOCKER_PASS: ${{secrets.DOCKERHUB_TOKEN}}
       run: docker login -u $DOCKER_USER -p $DOCKER_PASS
     - name: Build docker image
-      run: docker build --tag ${{DOCKERHUB_USER}}/proxyman:${{github.ref_name}} .
+      run: docker build --tag ${{secrets.DOCKERHUB_USER}}/proxyman:${{github.ref_name}} .
     - name: Push image to registry
-      run: docker push ${{DOCKERHUB_USER}}/proxyman:${{github.ref_name}}
+      run: docker push ${{secrets.DOCKERHUB_USER}}/proxyman:${{github.ref_name}}
