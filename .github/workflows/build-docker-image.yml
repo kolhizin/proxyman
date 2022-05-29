@@ -13,5 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: docker build --tag proxy-man:${{github.ref_name}} .
+    - name: Login registry
+      env:
+        DOCKER_USER: ${{DOCKERHUB_USER}}
+        DOCKER_PASS: ${{DOCKERHUB_TOKEN}}
+      run: docker login -u $DOCKER_USER -p $DOCKER_PASS https://hub.docker.com/
+    - name: Build docker image
+      run: docker build --tag ${{DOCKERHUB_USER}}/proxyman:${{github.ref_name}} .
+    - name: Push image to registry
+      run: docker push ${{DOCKERHUB_USER}}/proxyman:${{github.ref_name}}
