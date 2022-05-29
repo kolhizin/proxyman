@@ -99,7 +99,7 @@ class DBView:
     def add_proxies(self, proxy_array):
         query = f"""
         insert into {self.schema_}.proxies (url, kind, enabled, priority)
-        values (:1, :2, :3, :4)
+        values (?, ?, ?, ?)
         returning proxy_id
         """
         input = [(x['url'] if type(x) is dict else x,
