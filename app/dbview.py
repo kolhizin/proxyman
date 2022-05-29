@@ -22,7 +22,7 @@ class DBView:
             from {schema}.log where status_dt > current_timestamp::DATE - 1) AS upd
         on src.proxy_id=upd.proxy_id
         when matched update set priority = 0.5 * priority + 0.5 * cnt_good / cnt_total, last_update=current_timestamp, last_good = cnt_good, last_bad=cnt_total - cnt_good
-        """.format(self.schema_)
+        """.format(schema=self.schema_)
         try:
             logger.info('Running update-proxies query')
             with self.engine_.connect() as conn:
@@ -98,7 +98,7 @@ class DBView:
 
     def add_proxies(self, proxy_array):
         query = f"""
-        insert into {self.schema}.proxies (url, kind, enabled, priority)
+        insert into {self.schema_}.proxies (url, kind, enabled, priority)
         values (:1, :2, :3, :4)
         returning proxy_id
         """
@@ -111,14 +111,14 @@ class DBView:
     
     def set_proxy_status(self, proxy_id, enabled=1):
         query = f"""
-        update {self.schema}.proxies set enabled={enabled}
+        update {self.schema_}.proxies set enabled={enabled}
         where proxy_id={proxy_id}
         """
         self.execute_(query)
 
     def notify_result(self, proxy_id, flg_success, duration=None, message=None):
         query = f"""
-        insert into {self.schema}.log (proxy_id, status_dt, flg_success, duration, err_message)
+        insert into {self.schema_}.log (proxy_id, status_dt, flg_success, duration, err_message)
         values ({proxy_id}, current_timestamp, {flg_success}, {duration if duration else 'NULL'}, {'"{}"'.format(message) if message else 'NULL'})
         """
         self.execute_(query)
