@@ -79,7 +79,7 @@ async def add_proxy(request):
         return sanic.response.json({'result': 'error', 'message': str(e)}, status=500)     
     return sanic.response.json({'result': 'ok', 'data':{'proxy_id': res}}, status=200)
 
-@app.update('/proxy')
+@app.patch('/proxy')
 async def update_proxy(request):
     """
     Update proxy status in manager. Can not change proxy params -- should add new.
