@@ -1,4 +1,3 @@
-from msilib import schema
 import sqlalchemy
 import threading
 import logging
