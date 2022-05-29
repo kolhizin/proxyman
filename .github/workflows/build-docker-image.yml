@@ -17,7 +17,7 @@ jobs:
       env:
         DOCKER_USER: ${{DOCKERHUB_USER}}
         DOCKER_PASS: ${{DOCKERHUB_TOKEN}}
-      run: docker login -u $DOCKER_USER -p $DOCKER_PASS https://hub.docker.com/
+      run: docker login -u $DOCKER_USER -p $DOCKER_PASS
     - name: Build docker image
       run: docker build --tag ${{DOCKERHUB_USER}}/proxyman:${{github.ref_name}} .
     - name: Push image to registry
