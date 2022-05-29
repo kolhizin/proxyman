@@ -8,11 +8,12 @@ import sys
 import argparse
 import yaml
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%dT%H-%M-%S')
+logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s', datefmt='%Y-%m-%dT%H-%M-%S')
 
 logging.info('Starting app...')
 
 app = sanic.Sanic("proxy-manager-app")
+logging.getLogger("sanic.root").propagate = False
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", default="/etc/config.yaml", help="path to config file")

@@ -42,7 +42,7 @@ class DBView:
         ) t where rnd_priority > 0 order by rnd
         """.format(schema=self.schema_)
         logger.info('Updating list of local proxies...')
-        tmp = self.execute_(query).fetch_all()
+        tmp = self.execute_(query).fetchall()
         logger.info('Read {} proxies from DB.'.format(len(tmp)))
         if self.update_thread_.is_alive():
             logger.warning('Can not start proxies update thread, because it is still alive!')
