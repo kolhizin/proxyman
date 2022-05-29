@@ -8,4 +8,4 @@ COPY ./ /app/
 
 EXPOSE 8000
 
-ENTRYPOINT [ "python" "app.py" ]
+ENTRYPOINT [ "python", "app.py" ]
