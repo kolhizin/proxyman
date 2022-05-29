@@ -19,12 +19,12 @@ parser.add_argument("-c", "--config", default="/etc/config.yaml", help="path to 
 parser.add_argument("-s", "--secret", default="/run/secrets/config.secret", help="path to secret file")
 args = parser.parse_args()
 
-with open(args['config'], 'r') as f:
+with open(args.config, 'r') as f:
     config = yaml.load(f, yaml.FullLoader)
 
 logging.info('Read config: {}'.format(config))
 
-with open(args['secret'], 'r') as f:
+with open(args.secret, 'r') as f:
     secret = yaml.load(f, yaml.FullLoader)
 
 logging.info('Configuring db-connection...')
