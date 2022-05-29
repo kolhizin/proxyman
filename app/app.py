@@ -5,11 +5,31 @@ import dbview
 import traceback
 import logging
 import sys
+import argparse
+import yaml
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%dT%H-%M-%S')
 
+logging.info('Starting app...')
+
 app = sanic.Sanic("proxy-manager-app")
-dbv = dbview.DBView('connstr', 'schema') #TBD
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config", default="/etc/config.yaml", help="path to config file")
+parser.add_argument("-s", "--secret", default="/run/secrets/config.secret", help="path to secret file")
+args = parser.parse_args()
+
+with open(args['config'], 'r') as f:
+    config = yaml.load(f, yaml.FullLoader)
+
+logging.info('Read config: {}'.format(config))
+
+with open(args['secret'], 'r') as f:
+    secret = yaml.load(f, yaml.FullLoader)
+
+logging.info('Configuring db-connection...')
+dbv = dbview.DBView(config['db']['connection-string'].format(secret['db-password']), config['db']['schema']) #TBD
+logging.info('Configured db-connection')
 
 @app.get('/proxy')
 async def get_proxy(request):
@@ -77,4 +97,4 @@ async def update_proxy(request):
     return sanic.response.json({'result': 'ok'}, status=200)
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=8000, **config['server'])
