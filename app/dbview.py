@@ -122,6 +122,6 @@ class DBView:
     def notify_result(self, proxy_id, flg_success, duration=None, message=None):
         query = f"""
         insert into {self.schema}.log (proxy_id, status_dt, flg_success, duration, err_message)
-        values ({proxy_id}, current_timestamp, {flg_success}, {duration if duration else 'NULL'}, {}, {'"{}"'.format(message) if message else 'NULL'})
+        values ({proxy_id}, current_timestamp, {flg_success}, {duration if duration else 'NULL'}, {'"{}"'.format(message) if message else 'NULL'})
         """
         self.execute_(query)
