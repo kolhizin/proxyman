@@ -15,8 +15,8 @@ jobs:
     - uses: actions/checkout@v3
     - name: Login registry
       env:
-        DOCKER_USER: ${{DOCKERHUB_USER}}
-        DOCKER_PASS: ${{DOCKERHUB_TOKEN}}
+        DOCKER_USER: ${{secrets.DOCKERHUB_USER}}
+        DOCKER_PASS: ${{secrets.DOCKERHUB_TOKEN}}
       run: docker login -u $DOCKER_USER -p $DOCKER_PASS
     - name: Build docker image
       run: docker build --tag ${{DOCKERHUB_USER}}/proxyman:${{github.ref_name}} .
