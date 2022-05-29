@@ -17,7 +17,7 @@ class DBView:
 
     def update_proxies_stats_(self):
         update_query = """
-        merge {schema}.proxies src
+        merge into {schema}.proxies src
         using (select proxy_id, sum(flg_success) as cnt_good, count(*) as cnt_total
             from {schema}.log where status_dt > current_timestamp::DATE - 1) AS upd
         on src.proxy_id=upd.proxy_id
