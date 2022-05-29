@@ -1,7 +1,7 @@
 FROM python:3.10.4-slim-buster
 
 RUN apt-get update
-RUN pip install aiohttp==3.8.1 sanic==22.3.2 psycopg2 pandas numpy sqlalchemy
+RUN pip install sanic==22.3.2 psycopg2-binary==2.9.3 sqlalchemy==1.4.36 PyYAML==6.0
 
 EXPOSE 8000
 

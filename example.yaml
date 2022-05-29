@@ -1,0 +1,7 @@
+server-config:
+  debug: false
+  workers: 1
+  access_log: false
+db-config:
+  connection-string: #connection string with {} for password
+  schema: crawler
