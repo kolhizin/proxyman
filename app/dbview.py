@@ -23,7 +23,7 @@ class DBView:
         using (select proxy_id, sum(flg_success) as cnt_good, count(*) as cnt_total
             from {schema}.log where status_dt > current_timestamp::DATE - 1) AS upd
         on src.proxy_id=upd.proxy_id
-        when matched update set priority = 0.5 * priority + 0.5 * cnt_good / cnt_total, last_update=current_timestamp
+        when matched update set priority = 0.5 * priority + 0.5 * cnt_good / cnt_total, last_update=current_timestamp, last_good = cnt_good, last_bad=cnt_total - cnt_good
         """.format(self.schema_)
         try:
             logger.info('Running update-proxies query')
@@ -62,6 +62,8 @@ class DBView:
             kind            CHAR(32),
             enabled         INTEGER,
             priority        REAL,
+            last_good       INTEGER,
+            last_bad        INTEGER,
             last_update     TIMESTAMP
         );
         CREATE TABLE IF NOT EXISTS {schema}.log (
@@ -93,6 +95,8 @@ class DBView:
     def get_proxy(self):
         if not self.proxies_:
             self.update_local_proxies_(self.mult_factor_)
+        if not self.proxies_:
+            raise ValueError('Error: could not find suitable proxies! Probably should add new batch!')
         return self.proxies_.pop()
 
     def add_proxies(self, proxy_array):
@@ -106,11 +110,18 @@ class DBView:
                     x.get('enabled', 1) if type(x) is dict else 1, 
                     x.get('priority', 1.0) if type(x) is dict else 1.0) x for x in proxy_array]
         res = self.execute_(query, input).fetchall()
-        return res
+        return [x[0] for x in res]
     
     def set_proxy_status(self, proxy_id, enabled=1):
         query = f"""
         update {self.schema}.proxies set enabled={enabled}
         where proxy_id={proxy_id}
+        """
+        self.execute_(query)
+
+    def notify_result(self, proxy_id, flg_success, duration=None, message=None):
+        query = f"""
+        insert into {self.schema}.log (proxy_id, status_dt, flg_success, duration, err_message)
+        values ({proxy_id}, current_timestamp, {flg_success}, {duration if duration else 'NULL'}, {}, {'"{}"'.format(message) if message else 'NULL'})
         """
         self.execute_(query)
