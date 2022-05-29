@@ -4,7 +4,7 @@ RUN apt-get update
 RUN pip install sanic==22.3.2 psycopg2-binary==2.9.3 sqlalchemy==1.4.36 PyYAML==6.0
 
 WORKDIR /app
-COPY ./ /app/
+COPY ./app/ /app/
 
 EXPOSE 8000
 
