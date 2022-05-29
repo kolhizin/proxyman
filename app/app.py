@@ -1,4 +1,3 @@
-print('Start-0')
 from argparse import ArgumentError
 import sanic
 import sanic.response

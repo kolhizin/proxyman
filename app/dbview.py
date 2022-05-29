@@ -108,7 +108,7 @@ class DBView:
         input = [(x['url'] if type(x) is dict else x,
                     x.get('kind', 'http') if type(x) is dict else 'http', 
                     x.get('enabled', 1) if type(x) is dict else 1, 
-                    x.get('priority', 1.0) if type(x) is dict else 1.0) x for x in proxy_array]
+                    x.get('priority', 1.0) if type(x) is dict else 1.0) for x in proxy_array]
         res = self.execute_(query, input).fetchall()
         return [x[0] for x in res]
     
