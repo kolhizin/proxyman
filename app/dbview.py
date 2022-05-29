@@ -13,7 +13,6 @@ class DBView:
             logger.warning('Lost connection to DB ({}). Retrying...'.format(str(e)))
             self.conn_ = self.engine_.connect()
             res = self.conn_.execute(*args, **kwargs)
-        self.conn_.commit()
         return res
 
     def update_proxies_stats_(self):
@@ -28,7 +27,6 @@ class DBView:
             logger.info('Running update-proxies query')
             with self.engine_.connect() as conn:
                 conn.execute(update_query)
-                conn.commit()
         except Exception as e:
             logger.error('Failed to update proxies stats: {}'.format(str(e)))
         else:
