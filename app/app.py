@@ -32,13 +32,14 @@ logging.info('Configuring db-connection...')
 dbv = dbview.DBView(config['db']['connection-string'].format(secret['db-password']), config['db']['schema']) #TBD
 logging.info('Configured db-connection')
 
-@app.get('/proxy', ignore_body=True)
+@app.get('/proxy')
 async def get_proxy(request):
     """
     Return random proxy satisifying criteria.
     """
     try:
-        proxy_id, url, kind = dbv.get_proxy()
+        args = request.args
+        proxy_id, url, kind = dbv.get_proxy(kind=args.get('kind', [None])[0] if args else None)
     except Exception as e:
         logging.error('Failed to get proxy: {}'.format(str(e)))
         logging.error('Traceback: {}'.format(traceback.format_exc()))
