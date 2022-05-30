@@ -51,6 +51,7 @@ async def notify_proxy_result(request):
     Notify results of requests using specified proxy.
     """
     try:
+        logging.debug('Adding result: {}'.format(str(request.args)))
         proxy_id = request.args['proxy_id']
         flg_success = int(request.args['flg_success'])
         if flg_success not in (0, 1):
@@ -69,11 +70,11 @@ async def add_proxy(request):
     """
     try:
         input = request.json
+        logging.debug('Adding proxies: {}'.format(str(input)))
         if type(input) is dict:
             input = [input]
         if not all([type(x) is dict and 'url' in x for x in input]):
-            raise ArgumentError('Argument to POST /proxy should be dict or list of dicts containing at list `url` key')
-        logging.debug('Adding proxies: {}'.format(input))
+            raise ArgumentError('Argument to POST /proxy should be dict or list of dicts containing at list `url` key')        
         res = dbv.add_proxies(input)
     except Exception as e:
         logging.error('Failed to add proxies: {}'.format(str(e)))
@@ -87,6 +88,7 @@ async def update_proxy(request):
     Update proxy status in manager. Can not change proxy params -- should add new.
     """
     try:
+        logging.debug('Updating proxy: {}'.format(str(request.args)))
         proxy_id = request.args['proxy_id']
         enabled = int(request.args['enabled'])
         if enabled not in (0, 1):
