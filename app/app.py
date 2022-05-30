@@ -32,13 +32,13 @@ logging.info('Configuring db-connection...')
 dbv = dbview.DBView(config['db']['connection-string'].format(secret['db-password']), config['db']['schema']) #TBD
 logging.info('Configured db-connection')
 
-@app.get('/proxy')
+@app.post('/get_proxy')
 async def get_proxy(request):
     """
     Return random proxy satisifying criteria.
     """
     try:
-        logging.debug('Requested proxy: args={}, json={}'.format(str(request.args), str(request.json)))
+        logging.debug('Requested proxy: {}'.format(request.json))
         proxy_id, url, kind = dbv.get_proxy()
     except Exception as e:
         logging.error('Failed to get proxy: {}'.format(str(e)))
@@ -46,15 +46,15 @@ async def get_proxy(request):
         return sanic.response.json({'result': 'error', 'message': str(e)}, status=500)    
     return sanic.response.json({'result': 'ok', 'data': {'kind': kind, 'url': url, 'proxy_id': proxy_id}}, status=200)
 
-@app.post('/result')
+@app.post('/set_result')
 async def notify_proxy_result(request):
     """
     Notify results of requests using specified proxy.
     """
     try:
-        logging.debug('Adding result: {}'.format(str(request.args)))
-        proxy_id = int(request.args['proxy_id'][0])
-        flg_success = int(request.args['flg_success'][0])
+        logging.debug('Adding result: {}'.format(request.json))
+        proxy_id = int(request.json['proxy_id'])
+        flg_success = int(request.json['flg_success'])
         if flg_success not in (0, 1):
             raise ArgumentError('Argument flg_success should be either 0 or 1, but got {}'.format(flg_success))
         dbv.notify_result(proxy_id, flg_success, duration=request.json.get('duration') if request.json else None, message=request.json.get('message') if request.json else None)
@@ -64,7 +64,7 @@ async def notify_proxy_result(request):
         return sanic.response.json({'result': 'error', 'message': str(e)}, status=500)    
     return sanic.response.json({'result': 'ok'}, status=200)
 
-@app.post('/proxy')
+@app.post('/add_proxy')
 async def add_proxy(request):
     """
     Add new proxy to manager.
@@ -83,15 +83,15 @@ async def add_proxy(request):
         return sanic.response.json({'result': 'error', 'message': str(e)}, status=500)     
     return sanic.response.json({'result': 'ok', 'data':{'proxy_id': res}}, status=200)
 
-@app.patch('/proxy')
+@app.post('/update_proxy')
 async def update_proxy(request):
     """
     Update proxy status in manager. Can not change proxy params -- should add new.
     """
     try:
-        logging.debug('Updating proxy: {}'.format(str(request.args)))
-        proxy_id = int(request.args['proxy_id'][0])
-        enabled = int(request.args['enabled'][0])
+        logging.debug('Updating proxy: {}'.format(request.json))
+        proxy_id = int(request.json['proxy_id'])
+        enabled = int(request.json['enabled'])
         if enabled not in (0, 1):
             raise ArgumentError('Argument enabled should be either 0 or 1, but got {}'.format(enabled))
         dbv.set_proxy_status(proxy_id, enabled=enabled)
