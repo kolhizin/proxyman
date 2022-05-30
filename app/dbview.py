@@ -17,22 +17,19 @@ class DBView:
 
     def update_proxies_stats_(self):
         update_query = """
-        with cte as (
+        update {schema}.proxies src
+        set priority = (priority*100 + cnt_good) / (100 + cnt_total),
+            last_update = current_timestamp, last_good = cnt_good, last_bad = cnt_total - cnt_good
+        from (
             select proxy_id, sum(flg_success) as cnt_good, count(*) as cnt_total
             from {schema}.log where status_dt > current_timestamp::DATE - 1
             group by proxy_id
-        )
-        update {schema}.proxies src
-        set priority = 0.5 * priority + 0.5 * cnt_good / cnt_total,
-            last_update=current_timestamp,
-            last_good = cnt_good,
-            last_bad=cnt_total - cnt_good
-        from cte where src.proxy_id = cte.proxy_id
+        ) stat
+        where src.proxy_id=stat.proxy_id
         """.format(schema=self.schema_)
         try:
             logger.info('Running update-proxies query')
-            with self.engine_.connect() as conn:
-                conn.execute(update_query)
+            self.engine_.execute(update_query)
         except Exception as e:
             logger.error('Failed to update proxies stats: {}'.format(str(e)))
         else:

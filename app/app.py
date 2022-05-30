@@ -32,7 +32,7 @@ logging.info('Configuring db-connection...')
 dbv = dbview.DBView(config['db']['connection-string'].format(secret['db-password']), config['db']['schema']) #TBD
 logging.info('Configured db-connection')
 
-@app.get('/proxy')
+@app.get('/proxy', ignore_body=True)
 async def get_proxy(request):
     """
     Return random proxy satisifying criteria.
