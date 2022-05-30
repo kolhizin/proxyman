@@ -52,8 +52,8 @@ async def notify_proxy_result(request):
     """
     try:
         logging.debug('Adding result: {}'.format(str(request.args)))
-        proxy_id = request.args['proxy_id']
-        flg_success = int(request.args['flg_success'])
+        proxy_id = int(request.args['proxy_id'][0])
+        flg_success = int(request.args['flg_success'][0])
         if flg_success not in (0, 1):
             raise ArgumentError('Argument flg_success should be either 0 or 1, but got {}'.format(flg_success))
         dbv.notify_result(proxy_id, flg_success, duration=request.json.get('duration'), message=request.json.get('message'))
@@ -89,8 +89,8 @@ async def update_proxy(request):
     """
     try:
         logging.debug('Updating proxy: {}'.format(str(request.args)))
-        proxy_id = request.args['proxy_id']
-        enabled = int(request.args['enabled'])
+        proxy_id = int(request.args['proxy_id'][0])
+        enabled = int(request.args['enabled'][0])
         if enabled not in (0, 1):
             raise ArgumentError('Argument enabled should be either 0 or 1, but got {}'.format(enabled))
         dbv.set_proxy_status(proxy_id, enabled=enabled)
