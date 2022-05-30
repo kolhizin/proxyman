@@ -56,7 +56,7 @@ async def notify_proxy_result(request):
         flg_success = int(request.args['flg_success'][0])
         if flg_success not in (0, 1):
             raise ArgumentError('Argument flg_success should be either 0 or 1, but got {}'.format(flg_success))
-        dbv.notify_result(proxy_id, flg_success, duration=request.json.get('duration'), message=request.json.get('message'))
+        dbv.notify_result(proxy_id, flg_success, duration=request.json.get('duration') if request.json else None, message=request.json.get('message') if request.json else None)
     except Exception as e:
         logging.error('Failed to notify result: {}'.format(str(e)))
         logging.error('Traceback: {}'.format(traceback.format_exc()))
