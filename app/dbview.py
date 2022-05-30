@@ -93,16 +93,12 @@ class DBView:
         self.update_thread_ = None
         self.create_tables_()
 
-    def get_proxy(self, kind=None):
+    def get_proxy(self):
         if not self.proxies_:
             self.update_local_proxies_(self.mult_factor_)
-        suitable = self.proxies_
-        if kind:
-            suitable = [x for x in suitable if x[2] == kind]
-        if not suitable:
+        if not self.proxies_:
             raise ValueError('Error: could not find suitable proxies! Probably should add new batch!')
-        self.proxies_.remove(suitable[0])
-        return suitable[0]
+        return self.proxies_.pop()
 
     def add_proxies(self, proxy_array):
         query = f"""

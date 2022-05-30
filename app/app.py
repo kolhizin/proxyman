@@ -38,8 +38,8 @@ async def get_proxy(request):
     Return random proxy satisifying criteria.
     """
     try:
-        args = request.args
-        proxy_id, url, kind = dbv.get_proxy(kind=args.get('kind', [None])[0] if args else None)
+        logging.debug('Requested proxy: args={}, json={}'.format(str(request.args), str(request.json)))
+        proxy_id, url, kind = dbv.get_proxy()
     except Exception as e:
         logging.error('Failed to get proxy: {}'.format(str(e)))
         logging.error('Traceback: {}'.format(traceback.format_exc()))
