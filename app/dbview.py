@@ -104,13 +104,13 @@ class DBView:
     def add_proxies(self, proxy_array):
         query = f"""
         insert into {self.schema_}.proxies (url, kind, enabled, priority)
-        values (?, ?, ?, ?)
+        values (:url, :kind, :enabled, :priority)
         returning proxy_id
         """
-        input = [(x['url'] if type(x) is dict else x,
-                    x.get('kind', 'http') if type(x) is dict else 'http', 
-                    x.get('enabled', 1) if type(x) is dict else 1, 
-                    x.get('priority', 1.0) if type(x) is dict else 1.0) for x in proxy_array]
+        input = [{'url': x['url'] if type(x) is dict else x,
+                  'kind': x.get('kind', 'http') if type(x) is dict else 'http', 
+                  'enabled': x.get('enabled', 1) if type(x) is dict else 1, 
+                  'priority':  x.get('priority', 1.0) if type(x) is dict else 1.0} for x in proxy_array]
         res = self.execute_(query, input).fetchall()
         return [x[0] for x in res]
     
