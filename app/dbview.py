@@ -50,10 +50,11 @@ class DBView:
         logger.info('Updating list of local proxies...')
         tmp = self.execute_(query).fetchall()
         logger.info('Read {} proxies from DB.'.format(len(tmp)))
-        if self.update_thread_.is_alive():
+        if self.update_thread_ is not None and self.update_thread_.is_alive():
             logger.warning('Can not start proxies update thread, because it is still alive!')
         else:
             logger.info('Starting proxies update thread!')
+            self.update_thread_ = threading.Thread(target=DBView.update_proxies_stats_, args=[self])
             self.update_thread_.start()
         self.proxies_ = tmp * mult_factor
 
@@ -92,7 +93,7 @@ class DBView:
         self.engine_ = sqlalchemy.create_engine(self.conn_str_)
         self.conn_ = self.engine_.connect()
         self.mult_factor_ = mult_factor
-        self.update_thread_ = threading.Thread(target=DBView.update_proxies_stats_, args=[self])
+        self.update_thread_ = None
         self.create_tables_()
 
     def get_proxy(self):
