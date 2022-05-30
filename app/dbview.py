@@ -73,7 +73,7 @@ class DBView:
             proxy_id        BIGINT NOT NULL,
             status_dt       TIMESTAMP NOT NULL,
             flg_success     INTEGER NOT NULL,
-            duration        REAL NOT NULL,
+            duration        REAL,
             err_message     VARCHAR(255)
         );
         """.format(schema=self.schema_)
