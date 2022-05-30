@@ -8,7 +8,7 @@ import sys
 import argparse
 import yaml
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s', datefmt='%Y-%m-%dT%H-%M-%S')
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s', datefmt='%Y-%m-%dT%H-%M-%S')
 
 logging.info('Starting app...')
 
@@ -73,6 +73,7 @@ async def add_proxy(request):
             input = [input]
         if not all([type(x) is dict and 'url' in x for x in input]):
             raise ArgumentError('Argument to POST /proxy should be dict or list of dicts containing at list `url` key')
+        logging.debug('Adding proxies: {}'.format(input))
         res = dbv.add_proxies(input)
     except Exception as e:
         logging.error('Failed to add proxies: {}'.format(str(e)))

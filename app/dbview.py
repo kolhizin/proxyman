@@ -20,6 +20,7 @@ class DBView:
         with cte as (
             select proxy_id, sum(flg_success) as cnt_good, count(*) as cnt_total
             from {schema}.log where status_dt > current_timestamp::DATE - 1
+            group by proxy_id
         )
         update {schema}.proxies src
         set priority = 0.5 * priority + 0.5 * cnt_good / cnt_total,
