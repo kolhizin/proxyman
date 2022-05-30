@@ -29,7 +29,8 @@ class DBView:
         """.format(schema=self.schema_)
         try:
             logger.info('Running update-proxies query')
-            self.engine_.execute(update_query)
+            with self.engine_.connect() as conn:
+                conn.execute(update_query)
         except Exception as e:
             logger.error('Failed to update proxies stats: {}'.format(str(e)))
         else:
