@@ -111,7 +111,7 @@ class DBView:
                   'kind': x.get('kind', 'http') if type(x) is dict else 'http', 
                   'enabled': x.get('enabled', 1) if type(x) is dict else 1, 
                   'priority':  x.get('priority', 1.0) if type(x) is dict else 1.0} for x in proxy_array]
-        res = self.execute_(query, input).fetchall()
+        res = self.execute_(sqlalchemy.sql.text(query), input).fetchall()
         return [x[0] for x in res]
     
     def set_proxy_status(self, proxy_id, enabled=1):
