@@ -9,7 +9,7 @@ import sys
 import argparse
 import yaml
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s', datefmt='%Y-%m-%dT%H-%M-%S')
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s', datefmt='%Y-%m-%dT%H:%M:%S')
 
 logging.info('Starting app...')
 
@@ -93,4 +93,4 @@ async def update_proxy(proxy_id: int, enabled: int):
     return fastapi.responses.JSONResponse(content={'result': 'ok'}, status_code=200)
 
 if __name__ == '__main__':
-    uvicorn.run("example:app", host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, log_level="info")
