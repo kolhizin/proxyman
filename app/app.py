@@ -68,7 +68,6 @@ async def add_proxy(payload: list):
     Add new proxy to manager.
     """
     try:
-        .debug('Adding proxies: {}'.format(str(input)))
         if not all([type(x) is dict and 'url' in x for x in payload]):
             raise ArgumentError('Argument to POST /proxy should be dict or list of dicts containing at list `url` key')        
         res = dbv.add_proxies(payload)
