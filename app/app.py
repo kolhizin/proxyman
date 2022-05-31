@@ -2,6 +2,7 @@ from argparse import ArgumentError
 import fastapi
 import fastapi.responses
 import uvicorn
+import typing
 import dbview
 import traceback
 import logging
@@ -33,7 +34,7 @@ dbv = dbview.DBView(config['db']['connection-string'].format(secret['db-password
 logging.info('Configured db-connection')
 
 @app.get('/proxy')
-async def get_proxy(response: fastapi.Response):
+async def get_proxy():
     """
     Return random proxy satisifying criteria.
     """
@@ -42,12 +43,11 @@ async def get_proxy(response: fastapi.Response):
     except Exception as e:
         logging.error('Failed to get proxy: {}'.format(str(e)))
         logging.error('Traceback: {}'.format(traceback.format_exc()))
-        response.status_code = 500
         return fastapi.responses.JSONResponse(content={'result': 'error', 'message': str(e)}, status_code=500)
-    return fastapi.responses.JSONResponse(content={'result': 'ok', 'data': {'kind': kind, 'url': url, 'proxy_id': proxy_id}}, status_code=500)
+    return fastapi.responses.JSONResponse(content={'result': 'ok', 'data': {'kind': kind, 'url': url, 'proxy_id': proxy_id}}, status_code=200)
 
 @app.post('/result')
-async def notify_proxy_result(proxy_id: int, status: int, payload: dict = {}):
+async def notify_proxy_result(proxy_id: int, status: int, payload: typing.Dict[typing.AnyStr, typing.Any] = {}):
     """
     Notify results of requests using specified proxy.
     """
@@ -63,7 +63,7 @@ async def notify_proxy_result(proxy_id: int, status: int, payload: dict = {}):
     return fastapi.responses.JSONResponse(content={'result': 'ok'}, status_code=200)
 
 @app.post('/proxy')
-async def add_proxy(payload: list):
+async def add_proxy(payload: typing.List[typing.Any]):
     """
     Add new proxy to manager.
     """
