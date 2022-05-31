@@ -13,7 +13,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(asctime)s.
 
 logging.info('Starting app...')
 
-app = fastapi.FastAPI("proxy-manager-app")
+app = fastapi.FastAPI()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", default="/etc/config.yaml", help="path to config file")
