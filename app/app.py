@@ -1,6 +1,7 @@
 from argparse import ArgumentError
-import sanic
-import sanic.response
+import fastapi
+import fastapi.responses
+import uvicorn
 import dbview
 import traceback
 import logging
@@ -12,8 +13,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(asctime)s.
 
 logging.info('Starting app...')
 
-app = sanic.Sanic("proxy-manager-app")
-logging.getLogger("sanic.root").propagate = False
+app = fastapi.FastAPI("proxy-manager-app")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", default="/etc/config.yaml", help="path to config file")
@@ -32,74 +32,66 @@ logging.info('Configuring db-connection...')
 dbv = dbview.DBView(config['db']['connection-string'].format(secret['db-password']), config['db']['schema']) #TBD
 logging.info('Configured db-connection')
 
-@app.post('/get_proxy')
-async def get_proxy(request):
+@app.get('/proxy')
+async def get_proxy(response: fastapi.Response):
     """
     Return random proxy satisifying criteria.
     """
     try:
-        logging.debug('Requested proxy: {}'.format(request.json))
         proxy_id, url, kind = dbv.get_proxy()
     except Exception as e:
         logging.error('Failed to get proxy: {}'.format(str(e)))
         logging.error('Traceback: {}'.format(traceback.format_exc()))
-        return sanic.response.json({'result': 'error', 'message': str(e)}, status=500)    
-    return sanic.response.json({'result': 'ok', 'data': {'kind': kind, 'url': url, 'proxy_id': proxy_id}}, status=200)
+        response.status_code = 500
+        return fastapi.responses.JSONResponse(content={'result': 'error', 'message': str(e)}, status_code=500)
+    return fastapi.responses.JSONResponse(content={'result': 'ok', 'data': {'kind': kind, 'url': url, 'proxy_id': proxy_id}}, status_code=500)
 
-@app.post('/set_result')
-async def notify_proxy_result(request):
+@app.post('/result')
+async def notify_proxy_result(proxy_id: int, status: int, payload: dict = {}):
     """
     Notify results of requests using specified proxy.
     """
     try:
-        logging.debug('Adding result: {}'.format(request.json))
-        proxy_id = int(request.json['proxy_id'])
-        flg_success = int(request.json['flg_success'])
-        if flg_success not in (0, 1):
-            raise ArgumentError('Argument flg_success should be either 0 or 1, but got {}'.format(flg_success))
-        dbv.notify_result(proxy_id, flg_success, duration=request.json.get('duration') if request.json else None, message=request.json.get('message') if request.json else None)
+        logging.debug('Adding result: {}'.format(payload))
+        if status not in (0, 1):
+            raise ArgumentError('Argument status should be either 0 or 1, but got {}'.format(status))
+        dbv.notify_result(proxy_id, status, duration=payload.get('duration'), message=payload.get('message'))
     except Exception as e:
         logging.error('Failed to notify result: {}'.format(str(e)))
         logging.error('Traceback: {}'.format(traceback.format_exc()))
-        return sanic.response.json({'result': 'error', 'message': str(e)}, status=500)    
-    return sanic.response.json({'result': 'ok'}, status=200)
+        return fastapi.responses.JSONResponse(content={'result': 'error', 'message': str(e)}, status_code=500)    
+    return fastapi.responses.JSONResponse(content={'result': 'ok'}, status_code=200)
 
-@app.post('/add_proxy')
-async def add_proxy(request):
+@app.post('/proxy')
+async def add_proxy(payload: list):
     """
     Add new proxy to manager.
     """
     try:
-        input = request.json
-        logging.debug('Adding proxies: {}'.format(str(input)))
-        if type(input) is dict:
-            input = [input]
-        if not all([type(x) is dict and 'url' in x for x in input]):
+        .debug('Adding proxies: {}'.format(str(input)))
+        if not all([type(x) is dict and 'url' in x for x in payload]):
             raise ArgumentError('Argument to POST /proxy should be dict or list of dicts containing at list `url` key')        
-        res = dbv.add_proxies(input)
+        res = dbv.add_proxies(payload)
     except Exception as e:
         logging.error('Failed to add proxies: {}'.format(str(e)))
         logging.error('Traceback: {}'.format(traceback.format_exc()))
-        return sanic.response.json({'result': 'error', 'message': str(e)}, status=500)     
-    return sanic.response.json({'result': 'ok', 'data':{'proxy_id': res}}, status=200)
+        return fastapi.responses.JSONResponse(content={'result': 'error', 'message': str(e)}, status_code=500)     
+    return fastapi.responses.JSONResponse(content={'result': 'ok', 'data':{'proxy_id': res}}, status_code=200)
 
-@app.post('/update_proxy')
-async def update_proxy(request):
+@app.patch('/proxy')
+async def update_proxy(proxy_id: int, enabled: int):
     """
     Update proxy status in manager. Can not change proxy params -- should add new.
     """
     try:
-        logging.debug('Updating proxy: {}'.format(request.json))
-        proxy_id = int(request.json['proxy_id'])
-        enabled = int(request.json['enabled'])
         if enabled not in (0, 1):
             raise ArgumentError('Argument enabled should be either 0 or 1, but got {}'.format(enabled))
         dbv.set_proxy_status(proxy_id, enabled=enabled)
     except Exception as e:
         logging.error('Failed to update proxy: {}'.format(str(e)))
         logging.error('Traceback: {}'.format(traceback.format_exc()))
-        return sanic.response.json({'result': 'error', 'message': str(e)}, status=500)    
-    return sanic.response.json({'result': 'ok'}, status=200)
+        return fastapi.responses.JSONResponse(content={'result': 'error', 'message': str(e)}, status_code=500)    
+    return fastapi.responses.JSONResponse(content={'result': 'ok'}, status_code=200)
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000, **config['server'])
+    uvicorn.run("example:app", host="0.0.0.0", port=8000, log_level="info")
