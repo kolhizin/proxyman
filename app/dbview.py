@@ -8,11 +8,10 @@ class DBView:
 
     def execute_(self, *args, **kwargs):
         try:
-            res = self.conn_.execute(*args, **kwargs)
+            res = self.engine_.execute(*args, **kwargs)
         except sqlalchemy.exc.DBAPIError as e: #What kind of exception
-            logger.warning('Lost connection to DB ({}). Retrying...'.format(str(e)))
-            self.conn_ = self.engine_.connect()
-            res = self.conn_.execute(*args, **kwargs)
+            logger.warning('Retrying query to DB due to error ({})...'.format(str(e)))
+            res = self.engine_.execute(*args, **kwargs)
         return res
 
     def update_proxies_stats_(self):
@@ -29,8 +28,7 @@ class DBView:
         """.format(schema=self.schema_)
         try:
             logger.info('Running update-proxies query')
-            with self.engine_.connect() as conn:
-                conn.execute(update_query)
+            self.engine_.execute(update_query)
         except Exception as e:
             logger.error('Failed to update proxies stats: {}'.format(str(e)))
         else:
@@ -89,7 +87,6 @@ class DBView:
         self.schema_ = schema
         self.proxies_ = []
         self.engine_ = sqlalchemy.create_engine(self.conn_str_)
-        self.conn_ = self.engine_.connect()
         self.mult_factor_ = mult_factor
         self.update_thread_ = None
         self.create_tables_()
