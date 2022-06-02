@@ -106,8 +106,8 @@ class DBView:
         logger.debug('add_proxies: loaded {} existing urls'.format(len(urls)))
         input = [{'url': (x['url'] if type(x) is dict else x).lower(),
                   'protocols': x.get('protocols', 'http').lower() if type(x) is dict else 'http', 
-                  'anonymous': x.get('anonymous','null') if type(x) is dict else 'null', 
-                  'enabled': x.get('enabled', 1) if type(x) is dict else 1, 
+                  'anonymous': int(x['anonymous']) if type(x) is dict and 'anonymous' in x else 'null', 
+                  'enabled': int(x.get('enabled', 1) if type(x) is dict else 1), 
                   'priority':  x.get('priority', 1.0) if type(x) is dict else 1.0} for x in proxy_array]
         logger.debug('add_proxies: prepared {} candidates'.format(len(input)))
         input = [x for x in input if x['url'] not in urls]
