@@ -1,4 +1,8 @@
 import requests
+import logging
+import lxml.etree
+
+logger = logging.getLogger(__name__)
 
 def parse_proxynova_com(html):
     s1 = lxml.etree.fromstring(html, parser=lxml.etree.HTMLParser(recover=True))
@@ -35,6 +39,7 @@ def get_proxies_hidemy_name():
     while True:
         try:
             response = requests.get(url_template.format(offset), headers=headers)
+            logger.debug('Requested {} with {}'.format(url_template.format(offset), response.status_code))
             if response.status_code != 200:
                 break
             tmp = parse_hidemy_name(response.text)
