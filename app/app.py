@@ -50,22 +50,6 @@ async def get_proxy():
         return fastapi.responses.JSONResponse(content={'result': 'error', 'message': str(e)}, status_code=500)
     return fastapi.responses.JSONResponse(content={'result': 'ok', 'data': {'kind': kind, 'url': url, 'proxy_id': proxy_id}}, status_code=200)
 
-@app.post('/result')
-async def notify_proxy_result(proxy_id: int, status: int, payload: typing.Dict[typing.AnyStr, typing.Any] = {}):
-    """
-    Notify results of requests using specified proxy.
-    """
-    try:
-        logging.debug('Adding result: {}'.format(payload))
-        if status not in (0, 1):
-            raise ArgumentError('Argument status should be either 0 or 1, but got {}'.format(status))
-        dbv.notify_result(proxy_id, status, duration=payload.get('duration'), message=payload.get('message'))
-    except Exception as e:
-        logging.error('Failed to notify result: {}'.format(str(e)))
-        logging.error('Traceback: {}'.format(traceback.format_exc()))
-        return fastapi.responses.JSONResponse(content={'result': 'error', 'message': str(e)}, status_code=500)    
-    return fastapi.responses.JSONResponse(content={'result': 'ok'}, status_code=200)
-
 @app.post('/proxy')
 async def add_proxy(payload: typing.List[typing.Any]):
     """
@@ -92,6 +76,35 @@ async def update_proxy(proxy_id: int, enabled: int):
         dbv.set_proxy_status(proxy_id, enabled=enabled)
     except Exception as e:
         logging.error('Failed to update proxy: {}'.format(str(e)))
+        logging.error('Traceback: {}'.format(traceback.format_exc()))
+        return fastapi.responses.JSONResponse(content={'result': 'error', 'message': str(e)}, status_code=500)    
+    return fastapi.responses.JSONResponse(content={'result': 'ok'}, status_code=200)
+
+@app.post('/result')
+async def notify_proxy_result(proxy_id: int, status: int, payload: typing.Dict[typing.AnyStr, typing.Any] = {}):
+    """
+    Notify results of requests using specified proxy.
+    """
+    try:
+        logging.debug('Adding result: {}'.format(payload))
+        if status not in (0, 1):
+            raise ArgumentError('Argument status should be either 0 or 1, but got {}'.format(status))
+        dbv.notify_result(proxy_id, status, duration=payload.get('duration'), message=payload.get('message'))
+    except Exception as e:
+        logging.error('Failed to notify result: {}'.format(str(e)))
+        logging.error('Traceback: {}'.format(traceback.format_exc()))
+        return fastapi.responses.JSONResponse(content={'result': 'error', 'message': str(e)}, status_code=500)    
+    return fastapi.responses.JSONResponse(content={'result': 'ok'}, status_code=200)
+
+@app.post('/refresh_proxies')
+async def notify_proxy_result(proxy_id: int, status: int, payload: typing.Dict[typing.AnyStr, typing.Any] = {}):
+    """
+    Load new proxy list
+    """
+    try:
+       dbv.add_proxies([{'url': url, 'protocols': protocols, 'anonymous': anonymous} for url, protocols, anonymous in proxies.gather_proxies()])
+    except Exception as e:
+        logging.error('Failed to refresh proxies: {}'.format(str(e)))
         logging.error('Traceback: {}'.format(traceback.format_exc()))
         return fastapi.responses.JSONResponse(content={'result': 'error', 'message': str(e)}, status_code=500)    
     return fastapi.responses.JSONResponse(content={'result': 'ok'}, status_code=200)
