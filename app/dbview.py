@@ -112,10 +112,7 @@ class DBView:
         logger.debug('add_proxies: prepared {} candidates'.format(len(input)))
         input = [x for x in input if x['url'] not in urls]
         logger.debug('add_proxies: adding {} new urls'.format(len(input)))
-        if len(input) == 0:
-            return []
-        res = self.execute_(sqlalchemy.sql.text(query), input).fetchall()
-        return [x[0] for x in res]
+        return [self.execute_(sqlalchemy.sql.text(query), [x]).fetchall()[0][0] for x in input] #workaround for bugs in sqlalchemy
     
     def set_proxy_status(self, proxy_id, enabled=1):
         query = f"""
