@@ -9,6 +9,7 @@ import logging
 import sys
 import argparse
 import yaml
+import proxies
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s', datefmt='%Y-%m-%dT%H:%M:%S')
 
@@ -32,6 +33,9 @@ with open(args.secret, 'r') as f:
 logging.info('Configuring db-connection...')
 dbv = dbview.DBView(config['db']['connection-string'].format(secret['db-password']), config['db']['schema']) #TBD
 logging.info('Configured db-connection')
+logging.info('Refresing proxies list...')
+dbv.add_proxies([{'url': url, 'protocols': protocols, 'anonymous': anonymous} for url, protocols, anonymous in proxies.gather_proxies()])
+logging.info('Refreshed proxies')
 
 @app.get('/proxy')
 async def get_proxy():

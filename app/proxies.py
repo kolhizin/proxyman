@@ -45,7 +45,7 @@ def get_proxies_hidemy_name():
         offset += 64
         res += tmp
         
-    return [('{}:{}'.format(x[0], x[1]), x[2].upper(), 'высокая' in x[3].lower()) for x in res]
+    return [('{}:{}'.format(x[0], x[1]), x[2].lower(), 'высокая' in x[3].lower()) for x in res]
 
 def gather_proxies():
     proxies = []
