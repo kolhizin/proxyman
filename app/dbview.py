@@ -102,7 +102,7 @@ class DBView:
         values (:url, :protocols, :anonymous, :enabled, :priority)
         returning proxy_id
         """
-        urls = set([x[0] for x in self.execute_(f'select lower(url) from {self.schema_}').fetchall()])
+        urls = set([x[0] for x in self.execute_(f'select lower(url) from {self.schema_}.proxies').fetchall()])
         input = [{'url': x['url'] if type(x) is dict else x,
                   'protocols': x.get('protocols', 'http') if type(x) is dict else 'http', 
                   'anonymous': x.get('anonymous','null') if type(x) is dict else 'null', 
