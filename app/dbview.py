@@ -17,11 +17,10 @@ class DBView:
     def update_proxies_stats_(self):
         update_query = """
         update {schema}.proxies src
-        set priority = (priority*100 + cnt_good) / (100 + cnt_total),
-            last_update = current_timestamp, last_good = cnt_good, last_bad = cnt_total - cnt_good
+        set priority = cnt_good / cnt_total
         from (
-            select proxy_id, sum(flg_success) as cnt_good, count(*) as cnt_total
-            from {schema}.log where status_dt > current_timestamp::DATE - 1
+            select proxy_id, sum(status) as cnt_good, count(*) as cnt_total
+            from {schema}.log where dttm > current_timestamp::DATE - 7
             group by proxy_id
         ) stat
         where src.proxy_id=stat.proxy_id
@@ -38,7 +37,7 @@ class DBView:
         query = """
         select proxy_id, url, kind
         from (
-            select proxy_id, url, kind, random() * priority as rnd_priority, random() as rnd
+            select proxy_id, url, protocols, anonymous, random() * priority as rnd_priority, random() as rnd
             from {schema}.proxies
             where enabled > 0
         ) t where rnd_priority > 0 order by rnd
@@ -59,17 +58,16 @@ class DBView:
         CREATE TABLE IF NOT EXISTS {schema}.proxies (
             proxy_id        SERIAL PRIMARY KEY,
             url             VARCHAR(255) NOT NULL,
-            kind            CHAR(32),
+            protocols       VARCHAR(255) NOT NULL,
+            anonymous       INTEGER,
             enabled         INTEGER,
-            priority        REAL,
-            last_good       INTEGER,
-            last_bad        INTEGER,
-            last_update     TIMESTAMP
+            priority        REAL
         );
         CREATE TABLE IF NOT EXISTS {schema}.log (
+            log_id          SERIAL PRIMARY KEY,
             proxy_id        BIGINT NOT NULL,
-            status_dt       TIMESTAMP NOT NULL,
-            flg_success     INTEGER NOT NULL,
+            dttm            TIMESTAMP NOT NULL,
+            status          INTEGER NOT NULL,
             duration        REAL,
             err_message     VARCHAR(255)
         );
@@ -100,14 +98,16 @@ class DBView:
 
     def add_proxies(self, proxy_array):
         query = f"""
-        insert into {self.schema_}.proxies (url, kind, enabled, priority)
-        values (:url, :kind, :enabled, :priority)
+        insert into {self.schema_}.proxies (url, protocols, anonymous, enabled, priority)
+        values (:url, :protocols, :anonymous, :enabled, :priority)
         returning proxy_id
         """
+        urls = set([x[0] for x in self.execute_(f'select lower(url) from {self.schema_}').fetchall()])
         input = [{'url': x['url'] if type(x) is dict else x,
-                  'kind': x.get('kind', 'http') if type(x) is dict else 'http', 
+                  'protocols': x.get('protocols', 'http') if type(x) is dict else 'http', 
+                  'anonymous': x.get('anonymous','null') if type(x) is dict else 'null', 
                   'enabled': x.get('enabled', 1) if type(x) is dict else 1, 
-                  'priority':  x.get('priority', 1.0) if type(x) is dict else 1.0} for x in proxy_array]
+                  'priority':  x.get('priority', 1.0) if type(x) is dict else 1.0} for x in proxy_array if (x['url'] if type(x) is dict else x).lower() not in urls]
         res = self.execute_(sqlalchemy.sql.text(query), input).fetchall()
         return [x[0] for x in res]
     
@@ -120,7 +120,7 @@ class DBView:
 
     def notify_result(self, proxy_id, flg_success, duration=None, message=None):
         query = f"""
-        insert into {self.schema_}.log (proxy_id, status_dt, flg_success, duration, err_message)
+        insert into {self.schema_}.log (proxy_id, dttm, status, duration, err_message)
         values ({proxy_id}, current_timestamp, {flg_success}, {duration if duration else 'NULL'}, {'"{}"'.format(message) if message else 'NULL'})
         """
         self.execute_(query)
