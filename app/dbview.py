@@ -103,12 +103,15 @@ class DBView:
         returning proxy_id
         """
         urls = set([x[0] for x in self.execute_(f'select lower(url) from {self.schema_}.proxies').fetchall()])
-        input = [{'url': x['url'] if type(x) is dict else x,
-                  'protocols': x.get('protocols', 'http') if type(x) is dict else 'http', 
+        logger.debug('add_proxies: loaded {} existing urls'.format(len(urls)))
+        input = [{'url': (x['url'] if type(x) is dict else x).lower(),
+                  'protocols': x.get('protocols', 'http').lower() if type(x) is dict else 'http', 
                   'anonymous': x.get('anonymous','null') if type(x) is dict else 'null', 
                   'enabled': x.get('enabled', 1) if type(x) is dict else 1, 
-                  'priority':  x.get('priority', 1.0) if type(x) is dict else 1.0} for x in proxy_array if (x['url'] if type(x) is dict else x).lower() not in urls]
-        print(input)
+                  'priority':  x.get('priority', 1.0) if type(x) is dict else 1.0} for x in proxy_array]
+        logger.debug('add_proxies: prepared {} candidates'.format(len(input)))
+        input = [x for x in input if x['url'] not in urls]
+        logger.debug('add_proxies: adding {} new urls'.format(len(input)))
         res = self.execute_(sqlalchemy.sql.text(query), input).fetchall()
         return [x[0] for x in res]
     
