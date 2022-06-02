@@ -108,6 +108,7 @@ class DBView:
                   'anonymous': x.get('anonymous','null') if type(x) is dict else 'null', 
                   'enabled': x.get('enabled', 1) if type(x) is dict else 1, 
                   'priority':  x.get('priority', 1.0) if type(x) is dict else 1.0} for x in proxy_array if (x['url'] if type(x) is dict else x).lower() not in urls]
+        print(input)
         res = self.execute_(sqlalchemy.sql.text(query), input).fetchall()
         return [x[0] for x in res]
     
